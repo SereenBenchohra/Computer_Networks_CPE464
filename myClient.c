@@ -16,9 +16,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include "HandleNode.h"
+#include "packets.h"
+
 #include "appPDU.h"
 
 #include "networks.h"
+
+
+#define HANDLE_ARG 1 
+#define SERVER_NAME_ARG 2
+#define SERVER_PORT 3
 
 #define MAXBUF 1024
 #define TRUE 1
@@ -35,16 +43,21 @@ int main(int argc, char * argv[])
 	checkArgs(argc, argv);
 
 	/* set up the TCP Client socket  */
-	socketNum = tcpClientSetup(argv[1], argv[2], DEBUG_FLAG);
+	socketNum = tcpClientSetup(argv[SERVER_NAME_ARG], argv[SERVER_PORT], DEBUG_FLAG);
+	HandleNode *node = createHandleNode(socketNum, (uint8_t *)argv[HANDLE_ARG]);
+
+	printf("Handle Node data %s %d\n", node->handle, node->socketNum);
 	
 	sendToServer(socketNum);
+
 	
+	free(node);
 	close(socketNum);
 	
 	return 0;
 }
-
-void sendToServer(int socketNum)
+// parse the cmd line of Client for %m and others things
+void sendToServer(int socketNum) // change this to handle node and where we send packets 
 {
 	while (TRUE)
 	{
@@ -55,8 +68,9 @@ void sendToServer(int socketNum)
 		int sent = 0;
 		int rec = 0;            //actual amount of data sent/* get the data and send it   */
 	
-	
-		sendLen = readFromStdin(sendBuf);
+		sendLen = readFromStdin(sendBuf); // read from buffer and parse for the the three commands 
+		// parse the first word 
+		split(sendBuf, " ");
 		printf("read: %s string len: %d (including null)\n", sendBuf, sendLen);
 	
 		sent =  sendPDU(socketNum, sendBuf, sendLen); // sends to server message
@@ -76,6 +90,7 @@ void sendToServer(int socketNum)
 
 }
 
+// change to $ prompt for chat program
 int readFromStdin(uint8_t *buffer)
 {
 	char aChar = 0;
@@ -83,7 +98,7 @@ int readFromStdin(uint8_t *buffer)
 	
 	// Important you don't input more characters than you have space 
 	buffer[0] = '\0';
-	printf("Enter data: ");
+	printf("$: ");
 	while (inputLen < (MAXBUF - 1) && aChar != '\n')
 	{
 		aChar = getchar();
@@ -104,7 +119,7 @@ int readFromStdin(uint8_t *buffer)
 void checkArgs(int argc, char * argv[])
 {
 	/* check command line arguments  */
-	if (argc != 3)
+	if (argc != 4)
 	{
 		printf("usage: %s host-name port-number \n", argv[0]);
 		exit(1);

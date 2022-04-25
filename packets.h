@@ -1,0 +1,30 @@
+#ifndef PACKETS_H
+#define PACKETS_H
+
+void split(unsigned char *string, char *delim);
+
+#define INITIAL_PACKET 1
+#define CONFIRM_GOOD_HANDLE 2
+
+#define ERROR_INITIAL_PACKET 3
+
+#define BROADCAST_PACKET 4
+
+#define MESSAGE_PACKET 5
+#define ERROR_MESSAGE_PACKET 7
+#define CLIENT_EXIT_PACKET 8
+
+#define SERVER_EXIT_PACKET 9
+#define CLIENT_LIST_PACKET 10
+#define SERVER_LIST_NUM_PACKET 11
+
+#define SERVER_LIST_NAME_PACKET 12
+#define SERVER_LIST_DONE_PACKET 13
+
+
+
+
+
+
+
+#endif
