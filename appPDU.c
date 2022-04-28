@@ -42,9 +42,8 @@ int recvPDU(int clientSocket, uint8_t * dataBuffer, int bufferLen) // first two 
 
 int sendPDU(int socketNumber, uint8_t * dataBuffer, int lengthOfData)
 {
-   
-  uint16_t PDU_header_len = lengthOfData + 2; // have the size of PDU be 2 bytes 
-  uint8_t PDU_buffer[PDU_header_len];   // create a PDU buffer accounting for PDU header len  
+   uint16_t PDU_header_len = lengthOfData + 2; // have the size of PDU be 2 bytes 
+   uint8_t PDU_buffer[PDU_header_len];   // create a PDU buffer accounting for PDU header len  
 
    PDU_header_len = htons(PDU_header_len);
    
@@ -61,7 +60,5 @@ int sendPDU(int socketNumber, uint8_t * dataBuffer, int lengthOfData)
 
    if (nbytes == 0)
       return 0;
-
   return lengthOfData;
-  
 }

@@ -1,7 +1,14 @@
 #ifndef PACKETS_H
 #define PACKETS_H
 
-void split(unsigned char *string, char *delim);
+#include <stdint.h>
+#include "HandleNode.h"
+
+// void split(unsigned char *string, char *delim);
+
+
+#define CHAT_HEADER_LEN 3
+#define HEADER_LEN_MAX 100
 
 #define INITIAL_PACKET 1
 #define CONFIRM_GOOD_HANDLE 2
@@ -21,9 +28,11 @@ void split(unsigned char *string, char *delim);
 #define SERVER_LIST_NAME_PACKET 12
 #define SERVER_LIST_DONE_PACKET 13
 
-
-
-
+uint8_t get_flag(uint8_t *packet, int dataLength);
+void create_packet_one(uint8_t *packet, HandleNode *node, int packet_length);
+void check_packet_type(uint8_t *packet, int dataLength, int socketNum, HandleNode **list);
+void recieve_packet_one(uint8_t *packet, int datalength, int socketNum, HandleNode **list);
+void print_bad_handle_error_in_client(HandleNode *node);
 
 
 

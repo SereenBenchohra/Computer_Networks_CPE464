@@ -14,5 +14,8 @@ typedef struct node
 }HandleNode;
 
 HandleNode *createHandleNode(int socketNumber, uint8_t *handleName); // create the handle Node
+HandleNode *getHandleNodeByHandle(uint8_t *handle, HandleNode **list);
+void addToHandleNodeList(int socketNumber, uint8_t * handleName, HandleNode **list);
+
 
 #endif 

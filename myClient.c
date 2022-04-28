@@ -2,7 +2,6 @@
 * myClient.c
 *
 *****************************************************************************/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -22,7 +21,6 @@
 #include "appPDU.h"
 
 #include "networks.h"
-
 
 #define HANDLE_ARG 1 
 #define SERVER_NAME_ARG 2
@@ -46,31 +44,49 @@ int main(int argc, char * argv[])
 	socketNum = tcpClientSetup(argv[SERVER_NAME_ARG], argv[SERVER_PORT], DEBUG_FLAG);
 	HandleNode *node = createHandleNode(socketNum, (uint8_t *)argv[HANDLE_ARG]);
 
-	printf("Handle Node data %s %d\n", node->handle, node->socketNum);
-	
-	sendToServer(socketNum);
+	int packet_length = node->handle_len + 2; // acount 1 byte for the flag and another for the handle length 
+	// send packet 1 to server 
+	uint8_t packet[packet_length];
+	create_packet_one(packet, node, packet_length); // create packet to send to Server 
+	uint8_t recBuf[MAXBUF];   //data buffer
+	memset(recBuf, 0, MAXBUF);		
 
+	recvPDU(socketNum, recBuf, MAXBUF); // get receive flag
+	uint8_t flag = get_flag(recBuf, 1);
+
+	// checks to see if flag recieved from server for handle, (tested for good and bad handle works great, header len includes null)
+	if (flag == CONFIRM_GOOD_HANDLE) 
+		sendToServer(socketNum); // might have to change parameters to incorporate Handle Node
+	else if (flag == ERROR_INITIAL_PACKET)
+		print_bad_handle_error_in_client(node);	
 	
 	free(node);
 	close(socketNum);
 	
 	return 0;
 }
+
 // parse the cmd line of Client for %m and others things
 void sendToServer(int socketNum) // change this to handle node and where we send packets 
 {
+	// create_packet_one(uint8_t *packet, HandleNode *node, int packet_length);
 	while (TRUE)
 	{
 		uint8_t sendBuf[MAXBUF];   //data buffer
 		uint8_t recBuf[MAXBUF];   //data buffer
+		memset(sendBuf, 0, MAXBUF);
+		memset(recBuf, 0, MAXBUF);		
 
 		int sendLen = 0;        //amount of data to send
 		int sent = 0;
 		int rec = 0;            //actual amount of data sent/* get the data and send it   */
 	
+		// create packet 1 for initial start 
+
 		sendLen = readFromStdin(sendBuf); // read from buffer and parse for the the three commands 
+
 		// parse the first word 
-		split(sendBuf, " ");
+		// split(sendBuf, " ");
 		printf("read: %s string len: %d (including null)\n", sendBuf, sendLen);
 	
 		sent =  sendPDU(socketNum, sendBuf, sendLen); // sends to server message
@@ -84,10 +100,7 @@ void sendToServer(int socketNum) // change this to handle node and where we send
 
 		printf("Message received on socket %d , length: %d Data: %s\n", socketNum, rec, sendBuf);
 
-	}
-	
-
-
+	}	
 }
 
 // change to $ prompt for chat program
