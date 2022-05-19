@@ -1,0 +1,9 @@
+Sereen Benchohra - Section 1 (3pm)
+
+Program 1 - Trace 
+
+All tests work except for the mix_IPoptions file
+To compile the program run the make file. 
+   $ make
+To run the program, 
+   $ ./Trace <pcap file> 

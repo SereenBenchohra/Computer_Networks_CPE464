@@ -1,0 +1,5 @@
+make --dry-run --always-make --keep-going --print-directory
+make: Entering directory '/home/sereen/CPE464/Program1_Trace'
+gcc -g -Wall  -o trace trace.c checksum.c  -lpcap 
+make: Leaving directory '/home/sereen/CPE464/Program1_Trace'
+ 

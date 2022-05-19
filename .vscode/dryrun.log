@@ -1,8 +1,6 @@
 make --dry-run --always-make --keep-going --print-directory
-make: Entering directory '/home/sereen/CPE464/Program2'
-gcc -c -g -Wall networks.c -o networks.o 
-gcc -c -g -Wall gethostbyname.c -o gethostbyname.o 
-gcc -g -Wall -o cclient myClient.c appPDU.c networks.o gethostbyname.o 
-gcc -g -Wall -o server myServer.c appPDU.c networks.o gethostbyname.o 
-make: Leaving directory '/home/sereen/CPE464/Program2'
+make: Entering directory '/home/sereen/CPE464'
+make: Leaving directory '/home/sereen/CPE464'
  
+make: *** No targets specified and no makefile found.  Stop.
+
