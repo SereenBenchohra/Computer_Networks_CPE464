@@ -9,41 +9,45 @@
 
 int recvPDU(int clientSocket, uint8_t * dataBuffer, int bufferLen) // first two bytes are the PDU_len
 {
-   uint16_t PDU_header_len, actualBufferLen;
-   uint8_t nbytes =  recv(clientSocket, dataBuffer , 2, MSG_WAITALL); // get the header len for the next recv
-
-   if (nbytes < 0 ) // if recv < -1 raise error
+   uint16_t PDU_header_len; 
+   int nbytes;
+   if ((nbytes =  recv(clientSocket, dataBuffer , 2, MSG_WAITALL)) < 0) // get the header len for the next recv
    {
       perror("Recv Fail");
       exit(EXIT_FAILURE);
    }
-
+   printf("%d\n", nbytes);
    if (nbytes == 0)
       return 0;
+   printf("In Rec PDU\n");
    
+
    memcpy(&PDU_header_len, dataBuffer, 2); // copies header length from Data Buffer 
-   actualBufferLen = ntohs(PDU_header_len) - 2; // set it to host byte order and get buffer len
+   PDU_header_len = ntohs(PDU_header_len); // set it to host byte order and get buffer len
 
-   nbytes = recv(clientSocket, dataBuffer , actualBufferLen , MSG_WAITALL);
-
-   if (nbytes < 0 ) // if recv < -1 raise error
-   {
-      perror("Recv Fail");
-      exit(EXIT_FAILURE);
-   }
-   if (nbytes > (PDU_header_len) )
+   if (PDU_header_len > bufferLen)
    {
       perror("Buffer Not Big Enough for PDU len");
       exit(EXIT_FAILURE);
    }
 
-   return actualBufferLen; // number of bytes received in the second recv())
+   // int actualBufferLen = PDU_header_len - 2;
+   nbytes = recv(clientSocket, dataBuffer , (PDU_header_len - 2) , MSG_WAITALL);
+
+   if (nbytes < 0 ) // if recv < -1 raise error
+   {
+      perror("Recv Fail");
+      exit(EXIT_FAILURE);
+   }
+
+   return nbytes; // number of bytes received in the second recv())
 }
 
 int sendPDU(int socketNumber, uint8_t * dataBuffer, int lengthOfData)
 {
-   uint16_t PDU_header_len = lengthOfData + 2; // have the size of PDU be 2 bytes 
-   uint8_t PDU_buffer[PDU_header_len];   // create a PDU buffer accounting for PDU header len  
+   
+  uint16_t PDU_header_len = lengthOfData + 2; // have the size of PDU be 2 bytes 
+  uint8_t PDU_buffer[PDU_header_len];   // create a PDU buffer accounting for PDU header len  
 
    PDU_header_len = htons(PDU_header_len);
    
@@ -60,5 +64,7 @@ int sendPDU(int socketNumber, uint8_t * dataBuffer, int lengthOfData)
 
    if (nbytes == 0)
       return 0;
+
   return lengthOfData;
+  
 }

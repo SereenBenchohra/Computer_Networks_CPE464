@@ -30,7 +30,7 @@
 #define TRUE 1
 
 void recvFromClient(int clientSocket);
-void serverControl(int serverSocket);
+void serverControl(int serverSocket, HandleNode **list);
 
 int checkArgs(int argc, char *argv[]);
 
@@ -40,10 +40,18 @@ int main(int argc, char *argv[])
 	int portNumber = 0;
 	
 	portNumber = checkArgs(argc, argv);
-	
+
+	int packet_Length; 
 	//create the server socket
 	serverSocket = tcpServerSetup(portNumber);
-	serverControl(serverSocket); // handles the poll and Client management
+	HandleNode *list = NULL; // create a empty handle node list to deal with
+	// check for packet
+/* 	int clientSocket = tcpAccept(serverSocket, DEBUG_FLAG); //socket descriptor for the client socket
+
+	uint8_t buf[MAXBUF];
+	int messageLen = recvPDU(clientSocket, buf, MAXBUF); // recieve message
+	check_packet_type(buf, messageLen, clientSocket, &list); */
+	serverControl(serverSocket, &list); // handles the poll and Client management
 	
 	/* close the sockets */
 	close(serverSocket); // close server socket when done
@@ -51,7 +59,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
-void addNewClient(int serverSocket)
+void addNewClient(int serverSocket, HandleNode **list)
 {
 	int clientSocket = tcpAccept(serverSocket, DEBUG_FLAG); //socket descriptor for the client socket
 	addToPollSet(clientSocket);
@@ -63,42 +71,50 @@ int processClient(int socketNumber, HandleNode **list)
 	memset(buf, 0, MAXBUF);
 	memset(sendBuf, 0, MAXBUF);
 
-	int messageLen = 0;
-	// int send = 0;
-	messageLen = recvPDU(socketNumber, buf, MAXBUF); // recieve message
-	
+	// int messageLen = 0;
+	int send = 0;
+	int messageLen = recvPDU(socketNumber, buf, MAXBUF); // recieve message
 
-	// recieve_packet_one(buf , messageLen, socketNumber); // don't need socket
+   // recieve_packet_one(buf , messageLen, socketNumber); // don't need socket
 	check_packet_type(buf, messageLen, socketNumber, list);
 
 	//printf("Message received on socket %d , length: %d Data: %s\n", socketNumber,  messageLen, buf); // prints the socket, length, and message
 	if (!strcmp("exit", (const char *)buf)) // sees if the CLient exits if  so returns 0 
 		return 0;
 	
-	//send = sendPDU(socketNumber, sendBuf, messageLen); // sends the message back to Client
-	//printf("Amount of data sent is: %d\n", send);
-
 	return messageLen;
 }
 
-void serverControl(int serverSocket) // sets up  polling to accept multiple clients 
+void serverControl(int serverSocket, HandleNode **list) // sets up  polling to accept multiple clients 
 {
+	int socket=0, sock = 0; 
+
 	setupPollSet();
 	addToPollSet(serverSocket); // adds main server to main poll set
-	HandleNode *list = NULL; // create a empty handle node list to deal with
-	int socket, sock; 
-
+	uint8_t recBuf[MAXBUF];
+	int clientSocket = tcpAccept(serverSocket, DEBUG_FLAG); //socket descriptor for the client socket
+	addToPollSet(clientSocket);
+	int messageLen = recvPDU(clientSocket, recBuf, MAXBUF); // recieve message
+	
+	uint8_t flag = get_flag(recBuf, messageLen);
+	if (flag == 1)
+	{
+		printf("%d", flag);
+		recieve_packet_one(recBuf, messageLen, clientSocket, list);
+	}
+	
 	while (TRUE)
 	{
 		socket = pollCall(-1); // call Poll
 		if (socket == serverSocket ) // if the socket is the server 
-			addNewClient(serverSocket); // add a new Client
+			addNewClient(serverSocket, list); // add a new Client
 		else {
-		   sock = processClient(socket, &list); // otherwise process the client
+		   sock = processClient(socket, list); // otherwise process the client
 			if (sock <= 0)	// if client is negative or 0 , means termination, and removes client from Poll set
 				removeFromPollSet(socket);
 		}
-			
+
+		print_list(list);
 	}
 	
 }

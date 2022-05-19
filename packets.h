@@ -33,6 +33,10 @@ void create_packet_one(uint8_t *packet, HandleNode *node, int packet_length);
 void check_packet_type(uint8_t *packet, int dataLength, int socketNum, HandleNode **list);
 void recieve_packet_one(uint8_t *packet, int datalength, int socketNum, HandleNode **list);
 void print_bad_handle_error_in_client(HandleNode *node);
+int read_commands(uint8_t *buffer, int bufferLen, HandleNode *node);
+void check_packet_type_client(uint8_t *packet, int dataLength, int socketNum);
+
+// void recieve_packet_one(uint8_t *packet, int socketNum, HandleNode **list);
 
 
 

@@ -37,7 +37,7 @@ HandleNode *getHandleNodeByHandle(uint8_t *handle, HandleNode **list)
      
    return node;
 }
-
+// works
 void addToHandleNodeList(int socketNumber, uint8_t * handleName, HandleNode **list)
 {
    HandleNode *node, *cur;
@@ -55,3 +55,28 @@ void addToHandleNodeList(int socketNumber, uint8_t * handleName, HandleNode **li
    node->prev = cur;
    
 }
+// works 
+void print_list(HandleNode **list)
+{
+   HandleNode *cur = *list;
+   while(cur != NULL)
+   {
+      printf("Handle: %s\n", cur->handle);
+      cur = cur->next;
+   }   
+
+}
+// frees all content in the list
+/*void freeHandleNodeList(HandleNode **list)
+{
+   HandleNode *temp,  *cur;
+   temp = cur = *list;
+   while(cur!= NULL)
+   {
+      temp = cur->next;
+      cur->next = 
+      temp = temp->next;
+      free(temp); // free node
+      list
+   }
+} */

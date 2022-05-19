@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include "pollLib.h"
 #include "HandleNode.h"
 #include "packets.h"
 
@@ -30,14 +31,15 @@
 #define TRUE 1
 #define DEBUG_FLAG 1
 
-void sendToServer(int socketNum);
+void clientControl(int socketNum, HandleNode *node);
 int readFromStdin(uint8_t *buffer);
 void checkArgs(int argc, char * argv[]);
 
 int main(int argc, char * argv[])
 {
 	int socketNum = 0;         //socket descriptor
-	
+	int first = 0; // if first time  
+
 	checkArgs(argc, argv);
 
 	/* set up the TCP Client socket  */
@@ -47,16 +49,19 @@ int main(int argc, char * argv[])
 	int packet_length = node->handle_len + 2; // acount 1 byte for the flag and another for the handle length 
 	// send packet 1 to server 
 	uint8_t packet[packet_length];
-	create_packet_one(packet, node, packet_length); // create packet to send to Server 
+	create_packet_one(packet, node, packet_length); // create //packet to send to Server 
+	// create_packet_one(packet, node, packet_length); 
 	uint8_t recBuf[MAXBUF];   //data buffer
 	memset(recBuf, 0, MAXBUF);		
 
-	recvPDU(socketNum, recBuf, MAXBUF); // get receive flag
-	uint8_t flag = get_flag(recBuf, 1);
+	recvPDU(socketNum, recBuf, MAXBUF);
 
+
+	uint8_t flag = get_flag(recBuf, 1);
+	printf("Flag : %d\n", flag);
 	// checks to see if flag recieved from server for handle, (tested for good and bad handle works great, header len includes null)
-	if (flag == CONFIRM_GOOD_HANDLE) 
-		sendToServer(socketNum); // might have to change parameters to incorporate Handle Node
+	if (flag == CONFIRM_GOOD_HANDLE)
+		clientControl(socketNum, node); // might have to change parameters to incorporate Handle Node
 	else if (flag == ERROR_INITIAL_PACKET)
 		print_bad_handle_error_in_client(node);	
 	
@@ -66,42 +71,74 @@ int main(int argc, char * argv[])
 	return 0;
 }
 
-// parse the cmd line of Client for %m and others things
-void sendToServer(int socketNum) // change this to handle node and where we send packets 
+int sendToServer(int socketNum, HandleNode *node)
 {
+	uint8_t sendBuf[MAXBUF];   //data buffer
+	memset(sendBuf, 0, MAXBUF);
+	int sendLen = 0;        //amount of data to send
+	sendLen = readFromStdin(sendBuf); // read from buffer and parse for the the three commands 
+	
+	read_commands(sendBuf, sendLen, node);
+
+	if (!strcmp("exit", (const char *)sendBuf ) || (sendLen == 0 ))
+		return -1;
+
+	return sendLen;
+}
+
+
+int recvFromServer(int socketNum, HandleNode *node)
+{
+	
+	uint8_t recBuf[MAXBUF];
+	int datalength;  //data buffer
+	memset(recBuf, 0, MAXBUF);
+	datalength = recvPDU(socketNum, recBuf, MAXBUF);	
+
+	check_packet_type_client(recBuf, datalength, socketNum);
+	
+	if (!strcmp("exit", (const char *)recBuf ) || (datalength == 0))
+		return -1;
+	
+	return datalength;
+
+}
+
+// parse the cmd line of Client for %m and others things
+void clientControl(int socketNum, HandleNode *node) // change this to handle node and where we send packets 
+{
+
+	setupPollSet();
+	addToPollSet(socketNum); // add server as 
+	addToPollSet(STDIN_FILENO); // add stdin to POLL set
+
+	int socketPoll ,ret;
 	// create_packet_one(uint8_t *packet, HandleNode *node, int packet_length);
 	while (TRUE)
 	{
-		uint8_t sendBuf[MAXBUF];   //data buffer
-		uint8_t recBuf[MAXBUF];   //data buffer
-		memset(sendBuf, 0, MAXBUF);
-		memset(recBuf, 0, MAXBUF);		
 
-		int sendLen = 0;        //amount of data to send
-		int sent = 0;
-		int rec = 0;            //actual amount of data sent/* get the data and send it   */
-	
-		// create packet 1 for initial start 
-
-		sendLen = readFromStdin(sendBuf); // read from buffer and parse for the the three commands 
-
-		// parse the first word 
-		// split(sendBuf, " ");
-		printf("read: %s string len: %d (including null)\n", sendBuf, sendLen);
-	
-		sent =  sendPDU(socketNum, sendBuf, sendLen); // sends to server message
-
-		if (!strcmp("exit", (const char *)sendBuf ) || (sent == 0)) // breaks from Client if ^C or exit is inputted 
-			break;
-
-		printf("Amount of data sent is: %d\n", sent);
-
-		rec =  recvPDU(socketNum, recBuf, sendLen); // recieves message from Client
-
-		printf("Message received on socket %d , length: %d Data: %s\n", socketNum, rec, sendBuf);
-
+		printf("$: ");
+		fflush(stdout);
+		socketPoll = pollCall(-1); // call Poll
+		
+			if(socketPoll == STDIN_FILENO) // check for stdio
+			{
+				ret = sendToServer(socketNum, node);
+				if( ret <= 0)
+					break;
+			}
+			else 
+			{
+				ret = recvFromServer(socketNum, node);
+				if( ret <= 0)
+					break;
+			}
+				
 	}	
+
+	close(socketPoll);
 }
+
 
 // change to $ prompt for chat program
 int readFromStdin(uint8_t *buffer)
@@ -111,7 +148,7 @@ int readFromStdin(uint8_t *buffer)
 	
 	// Important you don't input more characters than you have space 
 	buffer[0] = '\0';
-	printf("$: ");
+	//printf("$: ");
 	while (inputLen < (MAXBUF - 1) && aChar != '\n')
 	{
 		aChar = getchar();

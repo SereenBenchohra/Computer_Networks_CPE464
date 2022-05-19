@@ -9,7 +9,7 @@ LIBS =
 all:   cclient server
 
 cclient: myClient.c networks.o gethostbyname.o
-	$(CC) $(CFLAGS) -o cclient myClient.c appPDU.c packets.c HandleNode.c networks.o gethostbyname.o $(LIBS)
+	$(CC) $(CFLAGS) -o cclient myClient.c appPDU.c packets.c pollLib.c safeUtil.c HandleNode.c networks.o gethostbyname.o $(LIBS)
 
 server: myServer.c networks.o gethostbyname.o
 	$(CC) $(CFLAGS) -o server myServer.c packets.c pollLib.c safeUtil.c HandleNode.c appPDU.c networks.o gethostbyname.o $(LIBS)
