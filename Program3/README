@@ -1,0 +1,12 @@
+Sereen Benchohra - Afternoon Lab (3pm)
+
+If you don't have the Library necessary run "make -f build464Lib.mk " to build 
+the necessary libraries to build the file.
+
+Once built, run "make" to compile the code.
+
+Then after to run the server(needs to be done first) run:
+      ./server [error rate] [optional portNumber]
+
+To run the rcopy write:
+      ./rcopy  [error rate] [host] [portNumber]

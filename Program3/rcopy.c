@@ -78,17 +78,14 @@ void talkToServer(int socketNum, struct sockaddr_in6 * server)
 
 		pduLength = createPDU(pduBuffer, sequenceNum++, flag, (uint8_t *)buffer, dataLen);
 
-		//printf("Sending: %s with len: %d\n", buffer,dataLen);
 		outputPDU(pduBuffer, pduLength);
 	
 		safeSendto(socketNum, pduBuffer, pduLength, 0, (struct sockaddr *) server, serverAddrLen);
 		
-		// check with MaxBuf
 		pduLength = safeRecvfrom(socketNum, pduBuffer, (PAYLOAD_MAXBUF+ 7), 0, (struct sockaddr *) server, &serverAddrLen);
 		
 		outputPDU(pduBuffer, pduLength);
 
-		// print out bytes received
 		ipString = ipAddressToString(server);
 		printf("Server with ip: %s and port %d said it received %s\n", ipString, ntohs(server->sin6_port), buffer);
 	      
@@ -100,7 +97,6 @@ int readFromStdin(char * buffer)
 	char aChar = 0;
 	int inputLen = 0;        
 	
-	// Important you don't input more characters than you have space 
 	buffer[0] = '\0';
 	printf("Enter data: ");
 	while (inputLen < (PAYLOAD_MAXBUF - 1) && aChar != '\n')
