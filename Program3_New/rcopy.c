@@ -25,6 +25,16 @@
 
 typedef enum State STATE;
 
+// macros for argv to keep track of which argument is which
+
+#define FROM_FILENAME_ARG 1
+#define TO_FILENAME_ARG 2
+#define WINDOW_SIZE_ARG 3
+#define BUFFER_SIZE_ARG 4
+#define ERROR_PERCENT_ARG 5
+#define REMOTE_MACHINE_ARG 6
+#define REMOTE_PORT_ARG 7
+
 enum State
 {
    DONE, FILENAME, RECV_DATA, FILE_OK, START_STATE
@@ -41,7 +51,7 @@ int main(int argc, char *argv[])
 {
    check_args(argc, argv);
    
-   sendtoErr_init(atof(argv[4]), DROP_ON, FLIP_ON, DEBUG_ON, RSEED_ON);
+   sendtoErr_init(atof(argv[ERROR_PERCENT_ARG]), DROP_ON, FLIP_ON, DEBUG_ON, RSEED_ON);
    processFile(argv);
 
    return 0; 
@@ -63,12 +73,11 @@ void processFile(char *argv[])
             state = start_state(argv, server, &clientSeqNum);
             break;
          case FILENAME:
-            state = filename(argv[1], atoi(argv[3]), server);
+            state = filename(argv[FROM_FILENAME_ARG], atoi(argv[BUFFER_SIZE_ARG]), server);
             break;
          case FILE_OK:
-            state = file_ok(&output_file_fd, argv[2]);
+            state = file_ok(&output_file_fd, argv[TO_FILENAME_ARG]);
             break;
-
          case RECV_DATA:
             state = recv_data(output_file_fd, server, &clientSeqNum);
             break;
@@ -86,9 +95,10 @@ void processFile(char *argv[])
 STATE start_state(char **argv, Connection *server, uint32_t *clientSeqNum)
 {
    // Returns FILENAME if no error, otherwise DONE( to many connects, cannot connect to server)
+
    uint8_t packet[MAX_LEN];
    uint8_t buf[MAX_LEN];
-   int fileNameLen = strlen(argv[1]);
+   int fileNameLen = strlen(argv[FROM_FILENAME_ARG]);
    STATE returnValue = FILENAME;
    uint32_t bufferSize = 0;
 
@@ -96,14 +106,14 @@ STATE start_state(char **argv, Connection *server, uint32_t *clientSeqNum)
    if (server->sk_num > 0)
       close(server->sk_num);
    
-   if(udpClientSetup(argv[5], atoi(argv[6]), server ) < 0)
+   if(udpClientSetup(argv[REMOTE_MACHINE_ARG], atoi(argv[REMOTE_PORT_ARG]), server ) < 0)
       returnValue =  DONE; // error creating socket to server 
    else
    {
       // put in buffer size (for sending data) and filename 
-      bufferSize = htonl(atoi(argv[3]));
+      bufferSize = htonl(atoi(argv[BUFFER_SIZE_ARG]));
       memcpy(buf, &bufferSize, SIZE_OF_BUF_SIZE);
-      memcpy(&buf[SIZE_OF_BUF_SIZE], argv[1], fileNameLen);
+      memcpy(&buf[SIZE_OF_BUF_SIZE], argv[FROM_FILENAME_ARG], fileNameLen);
       printIPv6Info(&server->remote);
       send_buf(buf, fileNameLen + SIZE_OF_BUF_SIZE, server, FNAME, *clientSeqNum, packet);
       (*clientSeqNum)++;
@@ -213,30 +223,50 @@ STATE recv_data(int32_t output_file, Connection *server, uint32_t *clientSeqNum)
 
 void check_args(int argc, char **argv)
 {
-   if (argc != 7)
+   if (argc != 8)
    {
-      printf("Usage %s fromFile toFile buffer_size error_rate hostname port\n", argv[0]);
+      printf("Usage %s fromFile toFile window-size buffer_size error_rate hostname port\n", argv[0]);
       exit(EXIT_FAILURE);
    }
+
    
-   if (strlen(argv[1]) > 1000)
+
+   /*
+#define FROM_FILENAME_ARG 1
+#define TO_FILENAME_ARG 2
+#define WINDOW_SIZE_ARG 3
+#define BUFFER_SIZE_ARG 4
+#define ERROR_PERCENT_ARG 5
+#define REMOTE_MACHINE_ARG 6
+#define REMOTE_PORT_ARG 7
+
+   */
+
+   
+   if (strlen(argv[FROM_FILENAME_ARG]) > 1000)
    {
       printf("FROM filename to long needs to be less than 1000 and is: %ld\n", strlen(argv[1]));
       exit(EXIT_FAILURE);
    }
    
-   if (strlen(argv[2]) > 1000)
+   if (strlen(argv[TO_FILENAME_ARG]) > 1000)
    {
       printf("TO filename to long needs to be less than 1000 and is: %ld\n", strlen(argv[1]));
       exit(EXIT_FAILURE);
    }
-   if (atoi(argv[3]) < 400 || atoi(argv[3]) > 1400)
+   if (atoi(argv[WINDOW_SIZE_ARG]) <= 0)
+   {
+      printf("Window size has to be greater than 1\n");
+      exit(EXIT_FAILURE);
+   }
+   
+   if (atoi(argv[BUFFER_SIZE_ARG]) < 400 || atoi(argv[BUFFER_SIZE_ARG]) > 1400)
    {
       printf("Buffer size needs to be between 400 and 1400 and is: %d\n", atoi(argv[3]));
       exit(EXIT_FAILURE);
    }
    
-   if (atoi(argv[4]) < 0 || atoi(argv[4]) >= 1)
+   if (atoi(argv[ERROR_PERCENT_ARG]) < 0 || atoi(argv[ERROR_PERCENT_ARG]) >= 1)
    {
       printf("Error rate needs to be between 0 and less than 1 and is: %d\n", atoi(argv[4]));
       exit(EXIT_FAILURE);
