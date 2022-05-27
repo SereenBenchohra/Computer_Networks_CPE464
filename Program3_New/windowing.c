@@ -41,16 +41,11 @@ void printEntireWindow(Window * window)
 // add sequence number as parameter and not extract it from packet
 void addPDUtoWindow(Window * window, uint8_t *pduBuffer, int len, uint32_t seqNum)
 {
-
       //uint32_t seqNum;
       int index;
       PDU_Data *pdu_data;
       pdu_data = malloc(sizeof(PDU_Data));
-  
-     // memcpy(&seqNum, pduBuffer, sizeof(uint32_t));
-
-      // seqNum = ntohl(seqNum);
- 
+   
       index = seqNum % window->windowsize; 
       printf("index %d\n", index);
       printf("window size %d\n", window->windowsize); 
