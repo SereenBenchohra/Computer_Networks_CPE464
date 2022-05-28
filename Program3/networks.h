@@ -1,7 +1,5 @@
-
-// 	Writen - HMS April 2017
-//  Supports TCP and UDP - both client and server
-
+// writen - HMS April 2017
+// supports TCP and UDP - both client and server
 
 #ifndef __NETWORKS_H__
 #define __NETWORKS_H__
@@ -16,16 +14,27 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
+#include "gethostbyname.h"
+
 #define BACKLOG 10
 
-// for the server side
-int tcpServerSetup(int serverPort);
-int tcpAccept(int mainServerSocket, int debugFlag);
-int udpServerSetup(int serverPort);
+typedef struct connection Connection;
 
-// for the client side
-int tcpClientSetup(char * serverName, char * serverPort, int debugFlag);
-int setupUdpClientToServer(struct sockaddr_in6 *serverAddress, char * hostName, int serverPort);
+struct connection
+{
+    int32_t sk_num;
+    struct sockaddr_in6 remote;
+    uint32_t len;
+};
 
+int safeGetUdpSocket();
+int udpServerSetup(int portNumber);
+int udpClientSetup(char *hostname, int port_num, Connection *connection);
+int select_call(int32_t socket_num, int32_t seconds, int32_t microseconds);
+int safeSendto(uint8_t *packet, uint32_t len, Connection *connection);
+int safeRecvfrom(int recv_sk_num, uint8_t *packet, int len, Connection *from);
+
+// just for printout info
+void printIPv6Info(struct sockaddr_in6 *client);
 
 #endif

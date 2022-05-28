@@ -15,7 +15,7 @@
 #ifdef __LIBCPE464_
 #include "cpe464.h"
 #endif
-
+/*
 int safeRecvfrom(int socketNum, void * buf, int len, int flags, struct sockaddr *srcAddr, int * addrLen)
 {
 	int returnValue = 0;
@@ -51,7 +51,7 @@ int safeRecv(int socketNum, void * buf, int len, int flags)
 	
 	return returnValue;
 }
-
+*/ 
 int safeSend(int socketNum, void * buf, int len, int flags)
 {
 	int returnValue = 0;

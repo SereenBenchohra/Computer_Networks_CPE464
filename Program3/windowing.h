@@ -38,7 +38,7 @@ void printWindow_metadata(Window *window);
 void printEntireWindow(Window *window);
 
 
-void addPDUtoWindow(Window *window, uint8_t *pduBuffer, int size);
+void addPDUtoWindow(Window *window, uint8_t *pduBuffer, int size, uint32_t seqNum);
 
 
 void process_RR(Window *window, int RR);

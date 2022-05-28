@@ -6,10 +6,11 @@
 #ifndef __SAFEUTIL_H__
 #define __SAFEUTIL_H__
 
+#include <stddef.h>
 struct sockaddr;
 
-int safeRecvfrom(int socketNum, void * buf, int len, int flags, struct sockaddr *srcAddr, int * addrLen);
-int safeSendto(int socketNum, void * buf, int len, int flags, struct sockaddr *srcAddr, int addrLen);
+//int safeRecvfrom(int socketNum, void * buf, int len, int flags, struct sockaddr *srcAddr, int * addrLen);
+// int safeSendto(int socketNum, void * buf, int len, int flags, struct sockaddr *srcAddr, int addrLen);
 int safeRecv(int socketNum, void * buf, int len, int flags);
 int safeSend(int socketNum, void * buf, int len, int flags);
 
