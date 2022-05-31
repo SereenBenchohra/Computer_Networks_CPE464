@@ -72,8 +72,9 @@ PDU_Data * findPDU(Window * window, uint32_t seqNum)
    i = seqNum % window->windowsize; 
 	return  window->pduArray[i];
 }
-
-void process_RR(Window * window, int RR){
+// int RR will prob be seq number + 1 
+void process_RR(Window * window, int RR)
+{
 
         int i;
         for(i = 0; i <window->windowsize; i++)

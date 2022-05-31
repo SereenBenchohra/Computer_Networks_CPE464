@@ -35,7 +35,7 @@ struct header
 
 enum FLAG
 {
-    FNAME = 7, DATA = 3, FNAME_OK = 8, FNAME_BAD = 9, ACK = 5, END_OF_FILE = 10, EOF_ACK = 11, CRC_ERROR = -1
+    FNAME = 7, SREJ = 6,  DATA = 3, FNAME_OK = 8, FNAME_BAD = 9, RR = 5, END_OF_FILE = 10, EOF_ACK = 11, CRC_ERROR = -1
 };
 
 int32_t send_buf(uint8_t *buf, uint32_t len, Connection *connection, uint8_t flag, uint32_t seq_num, uint8_t *packet);

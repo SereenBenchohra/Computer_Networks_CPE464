@@ -21,6 +21,8 @@
 
 #include "networks.h"
 #include "srej.h"
+#include "windowing.h"
+
 
 
 typedef enum State STATE;
@@ -41,9 +43,9 @@ enum State
 };
 
 void processFile(char *argv[]);
-STATE start_state(char **argv, Connection *server, uint32_t *clientSeqNum);
+STATE start_state(char **argv, Connection *server, uint32_t *clientSeqNum, Window *window);
 STATE filename(char *fname, int32_t buf_size, Connection *server);
-STATE recv_data(int32_t output_file, Connection *server, uint32_t *clientSeqNum);
+STATE recv_data(int32_t output_file, Connection *server, uint32_t *clientSeqNum, Window *window);
 STATE file_ok(int *outputFileFd, char *outputFileName);
 void check_args(int argc, char **argv);
 
@@ -56,12 +58,14 @@ int main(int argc, char *argv[])
 
    return 0; 
 }
-
+// add a state here ? 
 void processFile(char *argv[])
 {
    // argv needed to get file names , server name and server port number 
    Connection *server = (Connection *)calloc(1, sizeof(Connection));
    uint32_t clientSeqNum = 0;
+   Window *window = create_Window(atoi(argv[WINDOW_SIZE_ARG])); // 
+
    int32_t output_file_fd = 0;
    STATE state = START_STATE;  
 
@@ -70,7 +74,7 @@ void processFile(char *argv[])
       switch (state)
       {
          case START_STATE:
-            state = start_state(argv, server, &clientSeqNum);
+            state = start_state(argv, server, &clientSeqNum, window);
             break;
          case FILENAME:
             state = filename(argv[FROM_FILENAME_ARG], atoi(argv[BUFFER_SIZE_ARG]), server);
@@ -79,7 +83,7 @@ void processFile(char *argv[])
             state = file_ok(&output_file_fd, argv[TO_FILENAME_ARG]);
             break;
          case RECV_DATA:
-            state = recv_data(output_file_fd, server, &clientSeqNum);
+            state = recv_data(output_file_fd, server, &clientSeqNum, window);
             break;
          case DONE:
             break;
@@ -92,15 +96,16 @@ void processFile(char *argv[])
 
 }
 
-STATE start_state(char **argv, Connection *server, uint32_t *clientSeqNum)
+STATE start_state(char **argv, Connection *server, uint32_t *clientSeqNum, Window *window)
 {
    // Returns FILENAME if no error, otherwise DONE( to many connects, cannot connect to server)
 
-   uint8_t packet[MAX_LEN];
-   uint8_t buf[MAX_LEN];
+   uint8_t packet[MAX_LEN]; // "pdu buffer (Header + payload)"
+   uint8_t buf[MAX_LEN]; // "payload"
    int fileNameLen = strlen(argv[FROM_FILENAME_ARG]);
    STATE returnValue = FILENAME;
    uint32_t bufferSize = 0;
+   uint32_t windowsize = htonl(window->windowsize);
 
    // if we have connected to server before, close it before reconnect
    if (server->sk_num > 0)
@@ -110,12 +115,14 @@ STATE start_state(char **argv, Connection *server, uint32_t *clientSeqNum)
       returnValue =  DONE; // error creating socket to server 
    else
    {
-      // put in buffer size (for sending data) and filename 
+      // packet format to send initially [buf_size(4 bytes)][FromFileName(Filenamelen)] [Window_size(4 bytes)]
+      // put in buffer and window size (for sending data) and filename //  
       bufferSize = htonl(atoi(argv[BUFFER_SIZE_ARG]));
       memcpy(buf, &bufferSize, SIZE_OF_BUF_SIZE);
       memcpy(&buf[SIZE_OF_BUF_SIZE], argv[FROM_FILENAME_ARG], fileNameLen);
+      memcpy(&buf[SIZE_OF_BUF_SIZE + fileNameLen], &windowsize, sizeof(windowsize));
       printIPv6Info(&server->remote);
-      send_buf(buf, fileNameLen + SIZE_OF_BUF_SIZE, server, FNAME, *clientSeqNum, packet);
+      send_buf(buf, fileNameLen + SIZE_OF_BUF_SIZE + sizeof(windowsize), server, FNAME, *clientSeqNum, packet);
       (*clientSeqNum)++;
 
       returnValue =  FILENAME;
@@ -154,7 +161,7 @@ STATE filename(char *fname, int32_t buf_size, Connection *server)
 
    return (returnValue);
 }
-
+// is this the ACK, or file checking
 STATE file_ok(int *outputFileFd, char *outputFileName)
 {
    STATE returnValue = DONE;
@@ -169,11 +176,11 @@ STATE file_ok(int *outputFileFd, char *outputFileName)
    return returnValue;
 
 }
-
-STATE recv_data(int32_t output_file, Connection *server, uint32_t *clientSeqNum)
+// only increase the seq number when we send an RR 
+STATE recv_data(int32_t output_file, Connection *server, uint32_t *clientSeqNum, Window *window)
 {
    uint32_t seq_num = 0; 
-   uint32_t ackSeqNum = 0; 
+   uint32_t RRseqNum = 0; // RR seq number 
    uint8_t flag = 0; 
    int32_t data_len = 0; 
    uint8_t data_buf[MAX_LEN];
@@ -202,19 +209,30 @@ STATE recv_data(int32_t output_file, Connection *server, uint32_t *clientSeqNum)
       return DONE;
    }
    
-   else
+   /*else // might change this 
    {
       // send ACK (RR)
-      ackSeqNum = htonl(seq_num);
-      send_buf((uint8_t *)&ackSeqNum, sizeof(ackSeqNum), server, ACK, *clientSeqNum, packet);
+      RRseqNum = htonl(seq_num);
+      send_buf((uint8_t *)&RRseqNum, sizeof(RRseqNum), server, ACK, *clientSeqNum, packet);
       (*clientSeqNum)++;
 
    }
-   
-   if (seq_num == expected_seq_num) 
+   */
+   // if seq_num and expected num are the same and window is empty , send an RR packet to server to let it have an ACK
+   if (seq_num == expected_seq_num ) 
    {
       expected_seq_num++;
+      // added by me send an RR packet to the server 
+      send_buf((uint8_t *)&seq_num, sizeof(seq_num), server, RR, *clientSeqNum, packet);
       write(output_file, &data_buf, data_len);
+   }
+
+   // if expect < than the gotten that means we have missed an data
+   // send an SREJ to let the Server know (Server will then resend it )
+   else if(expected_seq_num < seq_num)
+   {
+     send_buf((uint8_t *)&seq_num, sizeof(seq_num), server, SREJ, *clientSeqNum, packet);
+     addPDUtoWindow(window, packet, data_len, *clientSeqNum);
    }
 
    // add windowing here, seq_num != expected_seq_num   <=

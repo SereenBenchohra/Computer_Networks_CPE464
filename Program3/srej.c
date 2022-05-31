@@ -13,6 +13,7 @@
 #include <netdb.h>
 
 #include "networks.h"
+#include "pdu.h"
 #include "srej.h"
 #include "checksum.h"
 

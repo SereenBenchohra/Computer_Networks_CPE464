@@ -9,7 +9,6 @@ int createPDU(uint8_t *pduBuffer, uint32_t sequenceNumber, uint8_t flag, uint8_t
    int netSeqNum = htonl(sequenceNumber);
    memcpy(pduBuffer, &netSeqNum, sizeof(uint32_t));
 
-
    memcpy(&pduBuffer[4], &chksum, sizeof(uint16_t));
 
    memcpy(&pduBuffer[6], &flag, sizeof(uint8_t));

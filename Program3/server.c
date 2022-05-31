@@ -18,6 +18,7 @@
 #include "networks.h"
 #include "srej.h"
 #include "cpe464.h"
+#include "windowing.h"
 
 typedef enum State STATE;
 
@@ -30,12 +31,12 @@ enum State
 void process_server(int serverSocketNumber);
 void process_client(int32_t serverSocketNumber, uint8_t *buf, int32_t recv_len, Connection * client);
 STATE filename(Connection *client, uint8_t *buf, int32_t recv_len, int32_t *data_file, 
-        int32_t *buf_size);
+        int32_t *buf_size, Window *window);
 STATE send_data(Connection *client, uint8_t *packet, int32_t *packet_len, int32_t data_file, 
-        int32_t buf_size, uint32_t *seq_num);
+        int32_t buf_size, uint32_t *seq_num, Window *window);
 STATE timeout_on_ack(Connection *client, uint8_t *packet, int32_t packet_len);
 STATE timeout_on_eof_ack(Connection *client, uint8_t *packet, int32_t packet_len);
-STATE wait_on_ack(Connection *client);
+STATE wait_on_ack(Connection *client, Window *window);
 STATE wait_on_eof_ack(Connection *client);
 int processArgs(int argc, char **argv);
 void handleZombies(int sig);
@@ -67,7 +68,7 @@ void process_server(int serverSocketNumber)
     signal(SIGCHLD, handleZombies);
 
     // get new client Connection, fork() child,
-    while(1)
+    while(1) // add select call here ? 
     {
         // block waiting for a new client
         recv_len = recv_buf(buf, MAX_LEN, serverSocketNumber, client, &flag, &seq_num);
@@ -99,6 +100,7 @@ void process_client(int32_t serverSocketNumber, uint8_t *buf, int32_t recv_len, 
     uint8_t packet[MAX_LEN];
     int32_t buf_size = 0;
     uint32_t seq_num = START_SEQ_NUM;
+    Window *window  = NULL; // can't initialize until I retrieve the W size from Rcopy
 
     while(state != DONE)
     {
@@ -108,10 +110,10 @@ void process_client(int32_t serverSocketNumber, uint8_t *buf, int32_t recv_len, 
                 state =  FILENAME;
                 break;
             case FILENAME:
-                state = filename(client, buf, recv_len, &data_file, &buf_size);
+                state = filename(client, buf, recv_len, &data_file, &buf_size, window);
                 break;
             case SEND_DATA:
-                state = send_data(client, packet, &packet_len, data_file, buf_size, &seq_num);
+                state = send_data(client, packet, &packet_len, data_file, buf_size, &seq_num, window);
                 break;
             case WAIT_ON_ACK:
                 state = wait_on_ack(client);
@@ -137,16 +139,19 @@ void process_client(int32_t serverSocketNumber, uint8_t *buf, int32_t recv_len, 
 }
 
 STATE filename(Connection *client, uint8_t *buf, int32_t recv_len,
-         int32_t *data_file, int32_t *buf_size)
+         int32_t *data_file, int32_t *buf_size, Window *window)
 {
     uint8_t response[1];
     char fname[MAX_LEN];
+    int32_t window_size = 0; // keep it consistent type with buf size
     STATE returnValue = DONE;
+    int fileNameLen = recv_len - SIZE_OF_BUF_SIZE;
 
-    // extract buffer sized used for sending data and also filename
+    // extract buffer sized used for sending data, window size and and also filename
     memcpy(buf_size, buf, SIZE_OF_BUF_SIZE);
     *buf_size = ntohl(*buf_size);
-    memcpy(fname, &buf[sizeof(*buf_size)], recv_len - SIZE_OF_BUF_SIZE);
+    memcpy(fname, &buf[sizeof(*buf_size)], fileNameLen);
+    memcpy(&window_size, &buf_size[sizeof(*buf_size) + fileNameLen], sizeof(window_size));
 
     // Create client socket to allow for processing this particular client
     client->sk_num = safeGetUdpSocket();
@@ -156,8 +161,9 @@ STATE filename(Connection *client, uint8_t *buf, int32_t recv_len,
         send_buf(response, 0, client, FNAME_BAD, 0, buf);
         returnValue = DONE;
     }
-    else
+    else // create Window here 
     {
+        window = create_Window(window_size);
         send_buf(response, 0, client, FNAME_OK, 0, buf);
         returnValue = SEND_DATA;
     }
@@ -166,7 +172,7 @@ STATE filename(Connection *client, uint8_t *buf, int32_t recv_len,
 }
 
 STATE send_data(Connection *client, uint8_t *packet, int32_t *packet_len, 
-        int32_t data_file, int buf_size, uint32_t *seq_num)
+        int32_t data_file, int buf_size, uint32_t *seq_num, Window *window)
 {
     uint8_t buf[MAX_LEN];
     int32_t len_read = 0;
@@ -184,8 +190,9 @@ STATE send_data(Connection *client, uint8_t *packet, int32_t *packet_len,
             (*packet_len) = send_buf(buf, 1, client, END_OF_FILE, *seq_num, packet);
             returnValue = WAIT_ON_EOF_ACK;
             break;
-        default:
+        default: // add PDU to Window here 
             (*packet_len) = send_buf(buf, len_read, client, DATA, *seq_num, packet);
+            addPDUtoWindow(window,buf, len_read,*seq_num);
             (*seq_num)++;
             returnValue = WAIT_ON_ACK;
             break;
@@ -193,12 +200,14 @@ STATE send_data(Connection *client, uint8_t *packet, int32_t *packet_len,
     }
     return returnValue;
 }
-
-STATE wait_on_ack(Connection * client)
+// modify to have RR and SREJ 
+STATE wait_on_ack(Connection * client, Window *window)
 {
     STATE returnValue = DONE;
     uint32_t crc_check = 0;
     uint8_t buf[MAX_LEN];
+    uint8_t packet[MAX_LEN];
+
     int32_t len = MAX_LEN;
     uint8_t flag = 0;
     uint32_t seq_num = 0;
@@ -214,7 +223,14 @@ STATE wait_on_ack(Connection * client)
         {
             returnValue = WAIT_ON_ACK;
         }
-        else if(flag != ACK)
+        else if (flag == RR) // if recieved an RR updated Sliding Window with process RR 
+            process_RR(window, seq_num);
+        else if(flag == SREJ) // if SREJ is recieved , resend the data 
+        {
+			send_buf(buf, len, client, DATA, seq_num, packet); // might have to utilize windowing here 
+        }
+        
+        else if(flag != RR && flag != SREJ)
         {
             printf("I wait_on_ack but its not an ACK flag (this should never happen) is: %d\n", flag);
             returnValue = DONE;
@@ -255,13 +271,13 @@ STATE wait_on_eof_ack(Connection *client)
     }
     return returnValue;
 }
-
+// Here is where we send a SREJ probably
 STATE timeout_on_ack(Connection *client, uint8_t *packet, int32_t packet_len)
 {
     safeSendto(packet, packet_len, client);
     return WAIT_ON_ACK;
 }
-
+// also 
 STATE timeout_on_eof_ack(Connection *client, uint8_t *packet, int32_t packet_len)
 {
     safeSendto(packet, packet_len, client);
