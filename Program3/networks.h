@@ -18,6 +18,11 @@
 
 #define BACKLOG 10
 
+enum SELECT
+{
+	SET_NULL, NOT_NULL
+};
+
 typedef struct connection Connection;
 
 struct connection

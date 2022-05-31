@@ -116,7 +116,7 @@ void process_client(int32_t serverSocketNumber, uint8_t *buf, int32_t recv_len, 
                 state = send_data(client, packet, &packet_len, data_file, buf_size, &seq_num, window);
                 break;
             case WAIT_ON_ACK:
-                state = wait_on_ack(client);
+                state = wait_on_ack(client, window);
                 break;
             case TIMEOUT_ON_ACK:
                 state = timeout_on_ack(client, packet, packet_len);
@@ -163,7 +163,7 @@ STATE filename(Connection *client, uint8_t *buf, int32_t recv_len,
     }
     else // create Window here 
     {
-        window = create_Window(window_size);
+        window = create_Window(window_size); // might cause problems 
         send_buf(response, 0, client, FNAME_OK, 0, buf);
         returnValue = SEND_DATA;
     }

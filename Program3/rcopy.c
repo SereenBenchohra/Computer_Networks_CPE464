@@ -28,6 +28,8 @@
 typedef enum State STATE;
 
 // macros for argv to keep track of which argument is which
+#define SEQ_SIZE 4
+
 
 #define FROM_FILENAME_ARG 1
 #define TO_FILENAME_ARG 2
@@ -43,9 +45,11 @@ enum State
 };
 
 void processFile(char *argv[]);
+void send_ACK_TYPE();
 STATE start_state(char **argv, Connection *server, uint32_t *clientSeqNum, Window *window);
 STATE filename(char *fname, int32_t buf_size, Connection *server);
 STATE recv_data(int32_t output_file, Connection *server, uint32_t *clientSeqNum, Window *window);
+
 STATE file_ok(int *outputFileFd, char *outputFileName);
 void check_args(int argc, char **argv);
 
@@ -85,6 +89,7 @@ void processFile(char *argv[])
          case RECV_DATA:
             state = recv_data(output_file_fd, server, &clientSeqNum, window);
             break;
+
          case DONE:
             break;
 
@@ -208,41 +213,55 @@ STATE recv_data(int32_t output_file, Connection *server, uint32_t *clientSeqNum,
       printf("File done\n");
       return DONE;
    }
+   else
+   {
+		//Send RR/SREJ
+		//Slide window
+		if (seq_num == expected_seq_num && (isWindowEmpty(window) == TRUE) ) 
+      {
+         expected_seq_num++;
+         send_buf((uint8_t *)&RRseqNum, sizeof(RRseqNum), server, RR, *clientSeqNum, packet);
+         write(output_file, &data_buf, data_len);
+			return RECV_DATA;
+		}
+      else if (seq_num == expected_seq_num && (isWindowEmpty(window) == FALSE) ) 
+      {
+         for(int i = 0; i <window->windowsize; i++)
+         {
+		      if ((window->pduArray[i]->seqNum < seq_num) && (window->pduArray[i] != NULL))
+            {
+               expected_seq_num++;
+               write(output_file, window->pduArray[i]->pdu, window->pduArray[i]->length);
+            }
+         }
+
+         process_RR(window, RRseqNum);
+
+      }
+		//Send RR 	
+		else if (seq_num < expected_seq_num) 
+      {
+         send_buf((uint8_t *)&RRseqNum, sizeof(RRseqNum), server, RR, *clientSeqNum, packet);
+			return RECV_DATA;
+		}
+      // SREJ  and add it to Window
+		else if (seq_num > expected_seq_num)
+      {
+         send_buf((uint8_t *)&seq_num, sizeof(RRseqNum), server, SREJ, *clientSeqNum, packet);
+         addPDUtoWindow(window, data_buf, data_len, seq_num);
+         return RECV_DATA;
+      }
+			
+		else       
+         return DONE;
+      
+			 
+   }
    
-   /*else // might change this 
-   {
-      // send ACK (RR)
-      RRseqNum = htonl(seq_num);
-      send_buf((uint8_t *)&RRseqNum, sizeof(RRseqNum), server, ACK, *clientSeqNum, packet);
-      (*clientSeqNum)++;
-
-   }
-   */
-   // if seq_num and expected num are the same and window is empty , send an RR packet to server to let it have an ACK
-   if (seq_num == expected_seq_num ) 
-   {
-      expected_seq_num++;
-      // added by me send an RR packet to the server 
-      send_buf((uint8_t *)&seq_num, sizeof(seq_num), server, RR, *clientSeqNum, packet);
-      write(output_file, &data_buf, data_len);
-   }
-
-   // if expect < than the gotten that means we have missed an data
-   // send an SREJ to let the Server know (Server will then resend it )
-   else if(expected_seq_num < seq_num)
-   {
-     send_buf((uint8_t *)&seq_num, sizeof(seq_num), server, SREJ, *clientSeqNum, packet);
-     addPDUtoWindow(window, packet, data_len, *clientSeqNum);
-   }
-
-   // add windowing here, seq_num != expected_seq_num   <=
-   /*else if (seq_num != expected_seq_num)
-   {
-   }
-   */
    return RECV_DATA;
    
 }
+
 
 void check_args(int argc, char **argv)
 {

@@ -13,7 +13,11 @@
 #include <netdb.h>
 #include <stdint.h>
 
-typedef struct {
+
+#define TRUE  1
+#define FALSE 0
+
+typedef struct{
 	uint32_t seqNum;
    uint8_t *pdu;
    int index, isValid, length;
@@ -36,6 +40,8 @@ void printWindow_metadata(Window *window);
 
 
 void printEntireWindow(Window *window);
+
+int isWindowEmpty(Window *window);
 
 
 void addPDUtoWindow(Window *window, uint8_t *pduBuffer, int size, uint32_t seqNum);

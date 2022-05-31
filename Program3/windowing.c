@@ -73,6 +73,16 @@ PDU_Data *findPDU(Window * window, uint32_t seqNum)
 	return  window->pduArray[i];
 }
 
+int isWindowEmpty(Window *window)
+{
+   int empty = TRUE;
+   for (int i = 0; i < window->windowsize; i++)
+      if (window->pduArray[i] != NULL)
+         empty = FALSE;
+   
+   return empty;
+}
+
 void remove_PDU_data(Window * window, uint32_t seqNum) // remove data from the queue once finished 
 {
  	int i = 0;        
@@ -100,3 +110,4 @@ void process_RR(Window * window, int RR)
     	      window->upper = window->lower + window->windowsize;
         }
 }
+
