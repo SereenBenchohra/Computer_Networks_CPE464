@@ -64,13 +64,20 @@ int isOpen(Window * window)
       return 1;
    return 0;
 }
-
-PDU_Data * findPDU(Window * window, uint32_t seqNum)
+// use this function in SREJ to get the data needed to get off queue probably make a function , that empties in the queue
+PDU_Data *findPDU(Window * window, uint32_t seqNum)
 {
          
 	int i = 0;        
    i = seqNum % window->windowsize; 
 	return  window->pduArray[i];
+}
+
+void remove_PDU_data(Window * window, uint32_t seqNum) // remove data from the queue once finished 
+{
+ 	int i = 0;        
+   i = seqNum % window->windowsize; 
+   free(window->pduArray[i]);  
 }
 // int RR will prob be seq number + 1 
 void process_RR(Window * window, int RR)

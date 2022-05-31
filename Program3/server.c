@@ -227,7 +227,9 @@ STATE wait_on_ack(Connection * client, Window *window)
             process_RR(window, seq_num);
         else if(flag == SREJ) // if SREJ is recieved , resend the data 
         {
-			send_buf(buf, len, client, DATA, seq_num, packet); // might have to utilize windowing here 
+			PDU_Data *pdu_data = findPDU(window, seq_num); // may have to free the variable pdu_data itself 
+            safeSendto(pdu_data->pdu, pdu_data->length, client); // don't use send_buf since header is already created 
+            remove_PDU_data(window, seq_num);  // since sent resends the data and remove it from the queue
         }
         
         else if(flag != RR && flag != SREJ)

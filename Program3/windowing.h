@@ -43,6 +43,12 @@ void addPDUtoWindow(Window *window, uint8_t *pduBuffer, int size, uint32_t seqNu
 
 void process_RR(Window *window, int RR);
 
+PDU_Data *findPDU(Window * window, uint32_t seqNum);
+
+
+void remove_PDU_data(Window * window, uint32_t seqNum); // remove data from the queue once finished 
+
+
 
 int isOpen(Window * window);
 
