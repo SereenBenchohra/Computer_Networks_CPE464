@@ -1,0 +1,310 @@
+
+Packet number: 1  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:6:25:78:c4:7d
+		Source MAC: 0:2:2d:90:75:89
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 128
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x4317)
+		Sender IP: 192.168.1.102
+		Dest IP: 66.94.230.35
+
+	ICMP Header
+		Type: Request
+
+Packet number: 2  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:2:2d:90:75:89
+		Source MAC: 0:6:25:78:c4:7d
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 52
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x6555)
+		Sender IP: 66.94.230.35
+		Dest IP: 192.168.1.102
+
+	ICMP Header
+		Type: Reply
+
+Packet number: 3  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:6:25:78:c4:7d
+		Source MAC: 0:2:2d:90:75:89
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 128
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x4217)
+		Sender IP: 192.168.1.102
+		Dest IP: 66.94.230.35
+
+	ICMP Header
+		Type: Request
+
+Packet number: 4  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:2:2d:90:75:89
+		Source MAC: 0:6:25:78:c4:7d
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 52
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0xa4f)
+		Sender IP: 66.94.230.35
+		Dest IP: 192.168.1.102
+
+	ICMP Header
+		Type: Reply
+
+Packet number: 5  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:6:25:78:c4:7d
+		Source MAC: 0:2:2d:90:75:89
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 128
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x7143)
+		Sender IP: 192.168.1.102
+		Dest IP: 64.233.187.99
+
+	ICMP Header
+		Type: Request
+
+Packet number: 6  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:2:2d:90:75:89
+		Source MAC: 0:6:25:78:c4:7d
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 242
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x70d1)
+		Sender IP: 64.233.187.99
+		Dest IP: 192.168.1.102
+
+	ICMP Header
+		Type: Reply
+
+Packet number: 7  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:6:25:78:c4:7d
+		Source MAC: 0:2:2d:90:75:89
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 128
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x7043)
+		Sender IP: 192.168.1.102
+		Dest IP: 64.233.187.99
+
+	ICMP Header
+		Type: Request
+
+Packet number: 8  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:2:2d:90:75:89
+		Source MAC: 0:6:25:78:c4:7d
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 242
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x6fd1)
+		Sender IP: 64.233.187.99
+		Dest IP: 192.168.1.102
+
+	ICMP Header
+		Type: Reply
+
+Packet number: 9  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:6:25:78:c4:7d
+		Source MAC: 0:2:2d:90:75:89
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 128
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x6f43)
+		Sender IP: 192.168.1.102
+		Dest IP: 64.233.187.99
+
+	ICMP Header
+		Type: Request
+
+Packet number: 10  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:2:2d:90:75:89
+		Source MAC: 0:6:25:78:c4:7d
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 242
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x6ed1)
+		Sender IP: 64.233.187.99
+		Dest IP: 192.168.1.102
+
+	ICMP Header
+		Type: Reply
+
+Packet number: 11  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:6:25:78:c4:7d
+		Source MAC: 0:2:2d:90:75:89
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 128
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x6e43)
+		Sender IP: 192.168.1.102
+		Dest IP: 64.233.187.99
+
+	ICMP Header
+		Type: Request
+
+Packet number: 12  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:2:2d:90:75:89
+		Source MAC: 0:6:25:78:c4:7d
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 242
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0x6dd1)
+		Sender IP: 64.233.187.99
+		Dest IP: 192.168.1.102
+
+	ICMP Header
+		Type: Reply
+
+Packet number: 13  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:6:25:78:c4:7d
+		Source MAC: 0:2:2d:90:75:89
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 128
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0xbc)
+		Sender IP: 192.168.1.102
+		Dest IP: 129.65.2.119
+
+	ICMP Header
+		Type: Request
+
+Packet number: 14  Frame Len: 74
+
+	Ethernet Header
+		Dest MAC: 0:6:25:78:c4:7d
+		Source MAC: 0:2:2d:90:75:89
+		Type: IP
+
+	IP Header
+		Header Len: 20 (bytes)
+		TOS: 0x0
+		TTL: 128
+		IP PDU Len: 60 (bytes)
+		Protocol: ICMP
+		Checksum: Correct (0xffbb)
+		Sender IP: 192.168.1.102
+		Dest IP: 129.65.2.119
+
+	ICMP Header
+		Type: Request
+
+Packet number: 15  Frame Len: 60
+
+	Ethernet Header
+		Dest MAC: ff:ff:ff:ff:ff:ff
+		Source MAC: 0:20:18:dc:ae:ab
+		Type: ARP
+
+	ARP header
+		Opcode: Request
+		Sender MAC: 0:20:18:dc:ae:ab
+		Sender IP: 192.168.1.105
+		Target MAC: 0:0:0:0:0:0
+		Target IP: 192.168.1.102
+
+
+Packet number: 16  Frame Len: 42
+
+	Ethernet Header
+		Dest MAC: 0:20:18:dc:ae:ab
+		Source MAC: 0:2:2d:90:75:89
+		Type: ARP
+
+	ARP header
+		Opcode: Reply
+		Sender MAC: 0:2:2d:90:75:89
+		Sender IP: 192.168.1.102
+		Target MAC: 0:20:18:dc:ae:ab
+		Target IP: 192.168.1.105
+

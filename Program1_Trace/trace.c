@@ -219,7 +219,9 @@ void read_IP_header(const u_char *pkt_data)
     memcpy(pkt_copy, pkt_data + IP_HEADER_LEN, 1); // copy over Header Length 
     // convert the hex value to the actual number of bytes 
     int head_len = (pkt_copy[0] & 0x0F) * 4;
-    unsigned short res = in_cksum((unsigned short *)(pkt_data + IP_HEADER_LEN), head_len);
+    //     unsigned short res = in_cksum((unsigned short *)(pkt_data + IP_HEADER_LEN), head_len);
+
+    unsigned short res = in_cksum((unsigned short *)(pkt_data), head_len);
 
     printf("%d (bytes)\n", head_len);
 
